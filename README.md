@@ -1,24 +1,34 @@
-# Hiberius Skills
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/family-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/family-light.svg">
+    <img alt="Hiberius Skills: ten Agent Skills for performance marketing, affiliate media buying, text forensics and personal agents" src="assets/family-dark.svg" width="100%">
+  </picture>
+</p>
 
-**Ten Agent Skills from fifteen years of buying traffic and building the systems around
-it. Every one is zero-dependency, runs offline, ships a working CLI and a real test
-suite, and encodes something you cannot get from documentation.**
+<h1 align="center">Hiberius Skills</h1>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-2ea44f.svg)](LICENSE)
-![Skills](https://img.shields.io/badge/skills-10-0f766e)
-![Zero dependencies](https://img.shields.io/badge/dependencies-0-6E56CF)
-![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-3776AB?logo=python&logoColor=white)
+<p align="center"><b>Ten Agent Skills from fifteen years of buying traffic and building the
+systems around it. Zero dependencies, offline, a working CLI and a real test suite in every
+one, and each encodes something you cannot get from documentation.</b></p>
 
-```bash
-# the whole set
-/plugin marketplace add Hiberius/hiberius-skills
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-2ea44f.svg"></a>
+  <img alt="10 skills" src="https://img.shields.io/badge/skills-10-8B5CF6">
+  <img alt="370 tests" src="https://img.shields.io/badge/tests-370%20passing-2ea44f">
+  <img alt="Zero dependencies" src="https://img.shields.io/badge/dependencies-0-6E56CF">
+  <img alt="No network calls" src="https://img.shields.io/badge/network-never-8f9bb8">
+</p>
 
-# or one at a time
-npx skills add Hiberius/cpa-profit-ops
-```
+<p align="center">
+  <code>/plugin marketplace add Hiberius/hiberius-skills</code>
+</p>
 
-Works with Claude Code, Claude Desktop, Codex, Cursor, Windsurf, OpenClaw and anything
-else that reads a `SKILL.md`.
+<p align="center">
+  <sub>Or one at a time: <code>npx skills add Hiberius/&lt;skill&gt;</code>. Works with Claude
+  Code, Claude Desktop, Codex, Cursor, Windsurf, OpenClaw and anything else that reads a
+  <code>SKILL.md</code>.</sub>
+</p>
 
 ---
 
@@ -51,8 +61,8 @@ else that reads a `SKILL.md`.
 
 ## Why these ten
 
-Each one comes out of a production system that had to survive contact with money:
-a multi-account Meta command centre, a lead bridge reconciling payouts hourly, an
+Each one comes out of a production system that had to survive contact with money: a
+multi-account Meta command centre, a lead bridge reconciling payouts hourly, an
 open-source WhatsApp receptionist, a competitor ad archive, a Facebook comment moderator,
 an incrementality platform.
 
@@ -61,7 +71,7 @@ wrong once with a real budget: that a postal code must stay a string end to end,
 daily cap is consumed on the sent date and not the received one, that a re-upload resets
 an ad's clock, that peeking at a p-value is not free.
 
-## Shared shape
+## The shape they share
 
 Every skill in this set:
 
@@ -71,6 +81,29 @@ Every skill in this set:
 - a **test suite** that runs in CI on 3.8 and 3.12
 - **references** carrying the depth, so the `SKILL.md` stays readable
 - **MIT**
+
+## The look
+
+Every banner and every internals diagram in this set is drawn by one script,
+[`brand/gen.py`](brand/gen.py), which is why ten repositories look like one hand. The
+structure is brutalist: an exposed grid, hard corners, hairline rules, registration marks,
+monospace labels. The surfaces are glass: layered translucent panels with a specular sweep
+and one accent glow. Each skill varies exactly one thing, its accent hue, plus a signature
+motif drawn from its own subject.
+
+No external font, no script, no remote asset: GitHub sanitises SVG and refuses anything
+else, so the whole system is geometry and type.
+
+## Work with me
+
+I build the systems these skills came out of: performance marketing infrastructure, lead
+pipelines, ad account tooling, internal automation, and products on the Cloudflare edge
+stack. If you need something like this built properly, I take on freelance and contract
+work.
+
+**[Christian Calabro — github.com/Hiberius](https://github.com/Hiberius)**
+
+Performance marketing · media buying · TypeScript · Cloudflare Workers · Next.js · Python
 
 ## License
 
