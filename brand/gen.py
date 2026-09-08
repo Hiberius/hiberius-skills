@@ -339,7 +339,6 @@ def motif_profit(c, x, y, w, h):
               'fill-opacity="0.26"/>' % (bx, base - spend[i], spend[i], c.accent))
         c.add('<rect x="%.1f" y="%.1f" width="17" height="%.1f" fill="%s" '
               'fill-opacity="0.85"/>' % (bx + 21, base - rev[i], rev[i], c.accent))
-        c.rule(bx, base - spend[i], bx + 38, base - spend[i], op=0.3, dash="2 3")
         c.text(bx + 19, base + 15, lab, size=9, color=c.t["ink_faint"],
                anchor="middle", tracking=0.8)
     c.rule(x + 4, base, x + w - 4, base, op=0.35)
@@ -539,15 +538,21 @@ MOTIFS = {
 }
 
 
+MOTIF_DY = {"unicode": 30, "chain": 16, "lineage": 8, "profit": 4, "window": 4}
+
+
 def motif_frame(c, skill, x, y, w, h):
     """The pane a motif lives in: label at the top, caption at the foot, graphic
     between them. Identical on all ten, which is the point."""
     c.glass(x, y, w, h, r=2)
     c.spine(x, y, h, op=0.55)
-    c.text(x + 18, y + 26, skill["motif_label"], size=8.5, color=skill["accent"],
+    c.add('<rect x="%.1f" y="%.1f" width="7" height="7" fill="%s"/>'
+          % (x + 18, y + 20, skill["accent"]))
+    c.text(x + 32, y + 27, skill["motif_label"], size=8.5, color=c.t["ink"],
            tracking=1.8)
-    c.rule(x + 18, y + 36, x + w - 18, y + 36, op=0.16)
-    MOTIFS[skill["motif"]](c, x + 24, y + 48, w - 48, h - 48 - 34)
+    c.rule(x + 18, y + 38, x + w - 18, y + 38, op=0.16)
+    dy = MOTIF_DY.get(skill["motif"], 0)
+    MOTIFS[skill["motif"]](c, x + 24, y + 48 + dy, w - 48, h - 48 - 34 - dy)
     c.rule(x + 18, y + h - 30, x + w - 18, y + h - 30, op=0.16)
     c.text(x + 18, y + h - 13, skill["motif_caption"], size=9.5,
            color=c.t["ink_soft"], tracking=0.3)
