@@ -1,0 +1,73 @@
+{
+  "name": "hiberius-skills",
+  "owner": {
+    "name": "Christian Calabro",
+    "url": "https://github.com/Hiberius"
+  },
+  "metadata": {
+    "description": "Ten Agent Skills from fifteen years of performance marketing and the systems built around it. Zero dependencies, offline, tested.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "invisible-text-forensics",
+      "source": { "source": "github", "repo": "Hiberius/invisible-text-forensics" },
+      "description": "Find and remove invisible Unicode: zero-width characters, AI watermarks, bidi overrides, tag-character prompt injection, homoglyphs. The byte layer every humanizer skill misses.",
+      "category": "security"
+    },
+    {
+      "name": "cpa-profit-ops",
+      "source": { "source": "github", "repo": "Hiberius/cpa-profit-ops" },
+      "description": "Profit and ROI by country, campaign, account and operator computed from real payouts. Ad account triage and break-even CPL. What platform dashboards cannot tell you.",
+      "category": "marketing"
+    },
+    {
+      "name": "affiliate-tracker-ops",
+      "source": { "source": "github", "repo": "Hiberius/affiliate-tracker-ops" },
+      "description": "Find where the click id dies between ad, lander, offer and postback. Postback validation and verified traffic-source macros. Zeustrack, Voluum, Binom, Keitaro.",
+      "category": "marketing"
+    },
+    {
+      "name": "whatsapp-receptionist-builder",
+      "source": { "source": "github", "repo": "Hiberius/whatsapp-receptionist-builder" },
+      "description": "Build an AI receptionist on the WhatsApp Cloud API: signature over the raw body, the 24-hour service window, idempotency against retries, double-booking prevention.",
+      "category": "development"
+    },
+    {
+      "name": "lead-delivery-reconciliation",
+      "source": { "source": "github", "repo": "Hiberius/lead-delivery-reconciliation" },
+      "description": "Normalise and deduplicate leads before delivery, then reconcile the buyer's register to get acceptance rate and effective payout per delivered lead.",
+      "category": "marketing"
+    },
+    {
+      "name": "competitor-ad-intelligence",
+      "source": { "source": "github", "repo": "Hiberius/competitor-ad-intelligence" },
+      "description": "Rank competitor creatives without spend data: longevity, variants, geo spread, velocity, recency. Lineage grouping so re-uploads do not fake short lifespans.",
+      "category": "marketing"
+    },
+    {
+      "name": "incrementality-testing",
+      "source": { "source": "github", "repo": "Hiberius/incrementality-testing" },
+      "description": "Sample ratio mismatch, an always-valid sequential test that survives daily peeking, CUPED variance reduction, and geo designs for channels with no user randomisation.",
+      "category": "analytics"
+    },
+    {
+      "name": "ad-comment-moderation",
+      "source": { "source": "github", "repo": "Hiberius/ad-comment-moderation" },
+      "description": "A rule engine for comments under Facebook and Instagram ads that states a reason for every verdict, keeps honest criticism visible, and finds dark post threads.",
+      "category": "marketing"
+    },
+    {
+      "name": "bank-statement-to-table",
+      "source": { "source": "github", "repo": "Hiberius/bank-statement-to-table" },
+      "description": "Convert a bank statement PDF into a spreadsheet, then prove the extraction against the statement's own running balance. Entirely offline.",
+      "category": "productivity"
+    },
+    {
+      "name": "always-on-agent",
+      "source": { "source": "github", "repo": "Hiberius/always-on-agent" },
+      "description": "Build a personal agent that runs on your own machine: four layers, waking a laptop that sleeps, approval gates, and a first pass that never reads a secret's value.",
+      "category": "development"
+    }
+  ]
+}
