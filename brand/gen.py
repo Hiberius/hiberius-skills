@@ -31,40 +31,38 @@ MONO = ('ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monos
 
 THEME = {
     "dark": {
-        "ground": "#080A0C",
-        "ground2": "#0E1216",
+        "ground": "#050709",
+        "ground2": "#101619",
         "grid": "#FFFFFF",
-        "grid_op": 0.045,
-        "panel_a": 0.075,          # glass fill, top
-        "panel_b": 0.018,          # glass fill, bottom
+        "grid_op": 0.075,
+        "panel_a": 0.115,          # glass fill, top
+        "panel_b": 0.032,          # glass fill, bottom
+        "tint": 0.075,             # how much colour the glass picks up
         "hairline": "#FFFFFF",
-        "hairline_op": 0.16,
-        "sheen": 0.10,
-        "ink": "#EDF1F3",
-        "ink_soft": "#96A1A8",
-        "ink_faint": "#5C666D",
-        "glow_op": 0.42,
-        "node_a": 0.065,
-        "node_b": 0.02,
+        "hairline_op": 0.20,
+        "sheen": 0.17,
+        "ink": "#F1F5F7",
+        "ink_soft": "#A6B1B8",
+        "ink_faint": "#7A868E",
+        "glow_op": 0.55,
         "shadow": 0.0,
     },
     "light": {
-        "ground": "#EFF2F3",
-        "ground2": "#F7F9FA",
+        "ground": "#E7EBEE",
+        "ground2": "#FBFCFD",
         "grid": "#0A0C0E",
-        "grid_op": 0.05,
-        "panel_a": 0.82,
-        "panel_b": 0.55,
+        "grid_op": 0.07,
+        "panel_a": 0.95,
+        "panel_b": 0.74,
+        "tint": 0.055,
         "hairline": "#0A0C0E",
-        "hairline_op": 0.16,
-        "sheen": 0.55,
-        "ink": "#0C1114",
-        "ink_soft": "#4E5A61",
-        "ink_faint": "#7C878E",
-        "glow_op": 0.26,
-        "node_a": 0.92,
-        "node_b": 0.7,
-        "shadow": 0.10,
+        "hairline_op": 0.15,
+        "sheen": 0.85,
+        "ink": "#0A0F13",
+        "ink_soft": "#48545B",
+        "ink_faint": "#6E7A81",
+        "glow_op": 0.30,
+        "shadow": 0.16,
     },
 }
 
@@ -200,11 +198,38 @@ class Canvas:
             % (eid, t["sheen"] * 2.2, t["sheen"] * 0.8))
         out.append('<rect x="%.1f" y="%.1f" width="%.1f" height="1" fill="url(#%s)"/>'
                    % (x, y, w, eid))
+        # the glass picks up colour from what is behind it: that is the liquid part
+        tid = self.uid("tint")
+        self.add_def(
+            '<linearGradient id="%s" x1="1" y1="0" x2="0" y2="1">'
+            '<stop offset="0" stop-color="%s" stop-opacity="%.3f"/>'
+            '<stop offset="0.7" stop-color="%s" stop-opacity="0"/></linearGradient>'
+            % (tid, self.accent, t["tint"], self.accent))
+        out.append('<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="%d" '
+                   'fill="url(#%s)"/>' % (x, y, w, h, r, tid))
         so = t["hairline_op"] if stroke_op is None else stroke_op
         out.append('<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="%d" fill="none" '
                    'stroke="%s" stroke-opacity="%.3f" stroke-width="1"/>'
                    % (x + .5, y + .5, w - 1, h - 1, r, t["hairline"], so))
         self.add("".join(out))
+
+    def marks(self, x, y, w, h, size=13, inset=9):
+        """Registration marks at the corners. Print-shop brutalism: the crop marks
+        stay visible on the finished piece."""
+        t = self.t
+        op = t["hairline_op"] * 2.2
+        for cx, cy, dx, dy in ((x, y, 1, 1), (x + w, y, -1, 1),
+                               (x, y + h, 1, -1), (x + w, y + h, -1, -1)):
+            self.add('<path d="M %.1f %.1f h %.1f M %.1f %.1f v %.1f" stroke="%s" '
+                     'stroke-opacity="%.3f" stroke-width="1"/>'
+                     % (cx + dx * inset, cy + dy * inset, dx * size,
+                        cx + dx * inset, cy + dy * inset, dy * size,
+                        t["hairline"], op))
+
+    def spine(self, x, y, h, op=0.95):
+        """The accent bar every pane in this set carries on its left edge."""
+        self.add('<rect x="%.1f" y="%.1f" width="3" height="%.1f" fill="%s" '
+                 'fill-opacity="%.2f"/>' % (x + 1, y + 1, h - 2, self.accent, op))
 
     def text(self, x, y, s, size=14, family="mono", color=None, weight=400,
              anchor="start", tracking=0, opacity=1.0):
@@ -271,6 +296,9 @@ class Canvas:
 
 # --------------------------------------------------------------------------
 # signature motifs: a miniature of what the skill actually does
+#
+# Each one draws inside a band the frame gives it. The frame owns the label and
+# the caption, which is what keeps ten different graphics looking like one set.
 # --------------------------------------------------------------------------
 
 def _box(c, x, y, w, h, op=0.5):
@@ -280,249 +308,227 @@ def _box(c, x, y, w, h, op=0.5):
 
 def _ghost(c, x, y, w, h):
     c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="1" fill="none" '
-          'stroke="%s" stroke-opacity="0.65" stroke-width="1" stroke-dasharray="2 2"/>'
+          'stroke="%s" stroke-opacity="0.75" stroke-width="1" stroke-dasharray="2 2"/>'
           % (x, y, w, h, c.accent))
 
 
 def motif_unicode(c, x, y, w, h):
-    """Visible glyphs, and the invisible ones revealed as ghost slots between them."""
-    base = y + h * 0.42
-    widths = [16, 11, 14, 0, 13, 17, 0, 12, 15, 0, 14]
-    cx = x + 22
+    base = y + h * 0.62
+    widths = [19, 13, 16, 0, 15, 20, 0, 14, 17, 0, 16]
+    cx = x + 8
     for i, gw in enumerate(widths):
         if gw:
-            _box(c, cx, base - 26, gw, 26, 0.55 if i % 3 else 0.8)
+            _box(c, cx, base - 40, gw, 40, 0.78 if i % 3 else 0.45)
             cx += gw + 6
         else:
-            _ghost(c, cx, base - 26, 7, 26)
-            c.text(cx + 3.5, base + 16, "U+", size=7, color=c.accent,
-                   anchor="middle", opacity=0.85)
-            cx += 13
-    c.rule(x + 20, base + 4, x + w - 20, base + 4, op=0.22)
-    c.text(x + 20, y + h - 14, "3 hidden between 8 visible", size=9.5,
-           color=c.t["ink_faint"], tracking=0.4)
+            _ghost(c, cx, base - 40, 8, 40)
+            c.text(cx + 4, base + 16, "U+", size=7.5, color=c.accent, anchor="middle")
+            cx += 14
+    c.rule(x + 4, base + 5, x + w - 4, base + 5, op=0.28)
 
 
 def motif_profit(c, x, y, w, h):
-    """Spend against revenue per country, with the profit gap left open."""
-    base = y + h - 46
+    base = y + h - 20
     labels = ["FR", "IT", "MA", "AE"]
-    spend = [58, 42, 36, 62]
-    rev = [86, 74, 44, 50]
-    step = (w - 60) / len(labels)
+    spend = [62, 46, 40, 68]
+    rev = [104, 88, 52, 58]
+    step = (w - 16) / len(labels)
     for i, lab in enumerate(labels):
-        bx = x + 34 + i * step
-        c.add('<rect x="%.1f" y="%.1f" width="14" height="%.1f" fill="%s" '
-              'fill-opacity="0.22"/>' % (bx, base - spend[i], spend[i], c.accent))
-        c.add('<rect x="%.1f" y="%.1f" width="14" height="%.1f" fill="%s" '
-              'fill-opacity="0.75"/>' % (bx + 18, base - rev[i], rev[i], c.accent))
-        if rev[i] > spend[i]:
-            c.rule(bx + 18, base - rev[i], bx + 32, base - rev[i], op=0.5)
-        c.text(bx + 16, base + 15, lab, size=9, color=c.t["ink_faint"],
-               anchor="middle", tracking=0.6)
-    c.rule(x + 24, base, x + w - 24, base, op=0.3)
-    c.text(x + 24, y + 22, "spend  ·  revenue", size=9.5, color=c.t["ink_faint"],
-           tracking=0.6)
+        bx = x + 12 + i * step
+        c.add('<rect x="%.1f" y="%.1f" width="17" height="%.1f" fill="%s" '
+              'fill-opacity="0.26"/>' % (bx, base - spend[i], spend[i], c.accent))
+        c.add('<rect x="%.1f" y="%.1f" width="17" height="%.1f" fill="%s" '
+              'fill-opacity="0.85"/>' % (bx + 21, base - rev[i], rev[i], c.accent))
+        c.rule(bx, base - spend[i], bx + 38, base - spend[i], op=0.3, dash="2 3")
+        c.text(bx + 19, base + 15, lab, size=9, color=c.t["ink_faint"],
+               anchor="middle", tracking=0.8)
+    c.rule(x + 4, base, x + w - 4, base, op=0.35)
 
 
 def motif_chain(c, x, y, w, h):
-    """The click id crossing four hops, dying at the third."""
     cy = y + h * 0.46
     names = ["AD", "LP", "OFFER", "PB"]
-    step = (w - 64) / 3
+    step = (w - 46) / 3
     pts = []
     for i, n in enumerate(names):
-        px = x + 32 + i * step
+        px = x + 23 + i * step
         pts.append(px)
         alive = i < 2
-        c.add('<rect x="%.1f" y="%.1f" width="34" height="34" rx="1" fill="%s" '
+        c.add('<rect x="%.1f" y="%.1f" width="42" height="42" rx="1" fill="%s" '
               'fill-opacity="%.2f" stroke="%s" stroke-opacity="%.2f"/>'
-              % (px - 17, cy - 17, c.accent, 0.5 if alive else 0.1,
-                 c.accent, 0.8 if alive else 0.3))
-        c.text(px, cy + 4, n, size=9, color=c.t["ink"] if alive else c.t["ink_faint"],
+              % (px - 21, cy - 21, c.accent, 0.55 if alive else 0.10,
+                 c.accent, 0.9 if alive else 0.35))
+        c.text(px, cy + 4, n, size=9.5, color=c.t["ink"] if alive else c.t["ink_faint"],
                anchor="middle", tracking=0.4)
     for i in range(3):
         broken = i == 1
         c.add('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" '
-              'stroke-opacity="%.2f" stroke-width="1.4"%s/>'
-              % (pts[i] + 19, cy, pts[i + 1] - 19, cy, c.accent,
-                 0.8 if not broken else 0.28,
+              'stroke-opacity="%.2f" stroke-width="1.6"%s/>'
+              % (pts[i] + 23, cy, pts[i + 1] - 23, cy, c.accent,
+                 0.85 if not broken else 0.3,
                  ' stroke-dasharray="3 3"' if broken else ""))
         if broken:
             mx = (pts[i] + pts[i + 1]) / 2
-            c.add('<path d="M %.1f %.1f l 9 9 M %.1f %.1f l -9 9" stroke="%s" '
-                  'stroke-opacity="0.95" stroke-width="1.8"/>'
-                  % (mx - 4.5, cy - 4.5, mx + 4.5, cy - 4.5, c.accent))
-    c.text(x + 24, y + h - 14, "clickid lost between LP and OFFER", size=9.5,
-           color=c.t["ink_faint"], tracking=0.4)
+            c.add('<path d="M %.1f %.1f l 11 11 M %.1f %.1f l -11 11" stroke="%s" '
+                  'stroke-opacity="1" stroke-width="2"/>'
+                  % (mx - 5.5, cy - 5.5, mx + 5.5, cy - 5.5, c.accent))
+    c.text(x + w / 2, cy + 44, "clickid", size=9, color=c.t["ink_faint"],
+           anchor="middle", tracking=1.2)
 
 
 def motif_window(c, x, y, w, h):
-    """The 24-hour service window: open arc in accent, closed remainder hairline."""
-    cx, cy, r = x + w * 0.34, y + h * 0.5, 58
-    c.add('<circle cx="%.1f" cy="%.1f" r="%.1f" fill="none" stroke="%s" '
-          'stroke-opacity="0.22" stroke-width="10"/>' % (cx, cy, r, c.t["hairline"]))
     import math
+    cx, cy, r = x + 62, y + h * 0.5, 56
+    c.add('<circle cx="%.1f" cy="%.1f" r="%.1f" fill="none" stroke="%s" '
+          'stroke-opacity="0.25" stroke-width="12"/>' % (cx, cy, r, c.t["hairline"]))
     frac = 0.76
     a = -math.pi / 2 + 2 * math.pi * frac
     large = 1 if frac > 0.5 else 0
     c.add('<path d="M %.2f %.2f A %.1f %.1f 0 %d 1 %.2f %.2f" fill="none" stroke="%s" '
-          'stroke-opacity="0.9" stroke-width="10" stroke-linecap="butt"/>'
+          'stroke-opacity="0.95" stroke-width="12"/>'
           % (cx, cy - r, r, r, large, cx + r * math.cos(a), cy + r * math.sin(a),
              c.accent))
-    c.text(cx, cy - 2, "18h", size=22, family="sans", weight=700, color=c.t["ink"],
+    c.text(cx, cy + 2, "18h", size=25, family="sans", weight=700, color=c.t["ink"],
            anchor="middle")
-    c.text(cx, cy + 16, "LEFT", size=9, color=c.t["ink_faint"], anchor="middle",
-           tracking=1.4)
-    tx = x + w * 0.62
-    c.text(tx, cy - 24, "free-form", size=11, color=c.accent, tracking=0.4)
-    c.text(tx, cy - 6, "open", size=9, color=c.t["ink_faint"], tracking=0.6)
-    c.rule(tx, cy + 6, x + w - 22, cy + 6, op=0.18)
-    c.text(tx, cy + 26, "template only", size=11, color=c.t["ink_soft"], tracking=0.4)
-    c.text(tx, cy + 44, "after 24h", size=9, color=c.t["ink_faint"], tracking=0.6)
+    c.text(cx, cy + 20, "LEFT", size=8.5, color=c.t["ink_faint"], anchor="middle",
+           tracking=1.6)
+    tx = x + 148
+    c.add('<rect x="%.1f" y="%.1f" width="10" height="10" fill="%s" '
+          'fill-opacity="0.95"/>' % (tx, cy - 34, c.accent))
+    c.text(tx + 18, cy - 25, "free-form", size=11, color=c.t["ink"], tracking=0.3)
+    c.text(tx + 18, cy - 11, "inside the window", size=9, color=c.t["ink_faint"])
+    c.rule(tx, cy + 4, x + w - 6, cy + 4, op=0.2)
+    c.add('<rect x="%.1f" y="%.1f" width="10" height="10" fill="none" stroke="%s" '
+          'stroke-opacity="0.6"/>' % (tx, cy + 18, c.accent))
+    c.text(tx + 18, cy + 27, "template only", size=11, color=c.t["ink_soft"],
+           tracking=0.3)
+    c.text(tx + 18, cy + 41, "after 24 hours", size=9, color=c.t["ink_faint"])
 
 
 def motif_match(c, x, y, w, h):
-    """Sent leads on the left, what the buyer paid for on the right."""
-    lx, rx = x + 40, x + w - 40
+    lx, rx = x + 18, x + w - 18
     rows = [(0, 0, True), (1, 1, True), (2, None, False), (3, 2, True), (4, 3, False)]
-    top = y + 34
-    gap = 26
-    for i, (a, b, paid) in enumerate(rows):
+    top = y + 14
+    gap = 30
+    for a, b, paid in rows:
         ay = top + a * gap
-        _box(c, lx - 12, ay - 7, 14, 14, 0.6)
+        _box(c, lx - 14, ay - 8, 16, 16, 0.65)
         if b is None:
-            c.add('<circle cx="%.1f" cy="%.1f" r="4" fill="none" stroke="%s" '
-                  'stroke-opacity="0.5"/>' % (rx + 6, ay, c.accent))
+            c.add('<circle cx="%.1f" cy="%.1f" r="5" fill="none" stroke="%s" '
+                  'stroke-opacity="0.45" stroke-dasharray="2 2"/>' % (rx + 6, ay,
+                                                                     c.accent))
             continue
         by = top + b * gap
-        op = 0.85 if paid else 0.3
+        op = 0.9 if paid else 0.28
         c.add('<path d="M %.1f %.1f C %.1f %.1f %.1f %.1f %.1f %.1f" fill="none" '
-              'stroke="%s" stroke-opacity="%.2f" stroke-width="1.3"%s/>'
-              % (lx + 4, ay, lx + 60, ay, rx - 60, by, rx - 14, by, c.accent, op,
+              'stroke="%s" stroke-opacity="%.2f" stroke-width="1.5"%s/>'
+              % (lx + 4, ay, lx + 70, ay, rx - 70, by, rx - 16, by, c.accent, op,
                  "" if paid else ' stroke-dasharray="3 3"'))
-        _box(c, rx - 2, by - 7, 14, 14, 0.75 if paid else 0.16)
-    c.text(lx - 12, top - 16, "SENT", size=9, color=c.t["ink_faint"], tracking=1.2)
-    c.text(rx + 12, top - 16, "PAID", size=9, color=c.t["ink_faint"], tracking=1.2,
+        _box(c, rx - 2, by - 8, 16, 16, 0.85 if paid else 0.14)
+    c.text(lx - 14, top - 16, "SENT", size=8.5, color=c.t["ink_faint"], tracking=1.4)
+    c.text(rx + 14, top - 16, "PAID", size=8.5, color=c.t["ink_faint"], tracking=1.4,
            anchor="end")
-    c.text(x + 24, y + h - 14, "3 of 5 paid  ·  effective payout 10.20", size=9.5,
-           color=c.t["ink_faint"], tracking=0.4)
 
 
 def motif_lineage(c, x, y, w, h):
-    """Three re-uploads collapsing into one lineage, and the longevity that reveals."""
-    left = x + 34
-    span = w - 76
+    left = x + 6
+    span = w - 12
     rows = [(0.10, 0.42), (0.36, 0.68), (0.60, 1.00)]
-    top = y + 34
+    top = y + 10
     for i, (a, b) in enumerate(rows):
-        ry = top + i * 22
-        c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="10" rx="1" fill="%s" '
+        ry = top + i * 24
+        c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="12" rx="1" fill="%s" '
               'fill-opacity="0.3"/>' % (left + span * a, ry, span * (b - a), c.accent))
-    merged_y = top + 84
-    c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="14" rx="1" fill="%s" '
-          'fill-opacity="0.85"/>' % (left + span * 0.10, merged_y, span * 0.90, c.accent))
-    c.add('<path d="M %.1f %.1f V %.1f" stroke="%s" stroke-opacity="0.4" '
-          'stroke-dasharray="2 3"/>' % (left + span * 0.10, top + 66, merged_y,
-                                        c.accent))
-    c.text(left, top - 16, "3 CREATIVES", size=9, color=c.t["ink_faint"], tracking=1.2)
-    c.text(left, merged_y + 34, "1 lineage, 99 days", size=9.5, color=c.accent,
-           tracking=0.4)
-    c.rule(left, merged_y + 22, left + span, merged_y + 22, op=0.18)
+    merged_y = top + 96
+    c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="18" rx="1" fill="%s" '
+          'fill-opacity="0.9"/>' % (left + span * 0.10, merged_y, span * 0.90, c.accent))
+    for i, (a, _b) in enumerate(rows):
+        c.add('<path d="M %.1f %.1f V %.1f" stroke="%s" stroke-opacity="0.35" '
+              'stroke-width="1" stroke-dasharray="2 3"/>'
+              % (left + span * a, top + 12 + i * 24, merged_y, c.accent))
+    c.text(left, top - 14, "3 CREATIVES", size=8.5, color=c.t["ink_faint"], tracking=1.4)
+    c.text(left + span, merged_y - 6, "1 LINEAGE, 99 DAYS", size=8.5, color=c.accent,
+           tracking=1.2, anchor="end")
 
 
 def motif_peek(c, x, y, w, h):
-    """Two p-value paths under a true null: fixed horizon dips below alpha, the
-    always-valid one does not."""
-    left, right = x + 36, x + w - 30
-    base, topy = y + h - 44, y + 34
-    alpha_y = base - (base - topy) * 0.25
-    c.rule(left, alpha_y, right, alpha_y, op=0.3, dash="4 4")
-    c.text(right, alpha_y - 6, "alpha", size=9, color=c.t["ink_faint"], anchor="end",
-           tracking=0.6)
-    fixed = [0.95, 0.7, 0.5, 0.62, 0.34, 0.18, 0.3, 0.12, 0.22, 0.08]
-    valid = [0.99, 0.92, 0.85, 0.88, 0.7, 0.62, 0.66, 0.55, 0.6, 0.52]
+    left, right = x + 6, x + w - 34
+    base, topy = y + h - 12, y + 16
+    alpha_y = base - (base - topy) * 0.22
+    c.rule(left, alpha_y, right + 28, alpha_y, op=0.35, dash="4 4")
+    c.text(right + 28, alpha_y - 7, "alpha", size=8.5, color=c.t["ink_faint"],
+           anchor="end", tracking=0.8)
+    fixed = [0.95, 0.7, 0.5, 0.62, 0.34, 0.18, 0.3, 0.12, 0.22, 0.06]
+    valid = [0.99, 0.93, 0.86, 0.89, 0.72, 0.64, 0.68, 0.57, 0.62, 0.54]
     step = (right - left) / (len(fixed) - 1)
 
     def path(vals, op, dash=None):
         pts = " ".join("%.1f,%.1f" % (left + i * step, base - (base - topy) * (1 - v))
                        for i, v in enumerate(vals))
         c.add('<polyline points="%s" fill="none" stroke="%s" stroke-opacity="%.2f" '
-              'stroke-width="1.8"%s/>' % (pts, c.accent, op,
-                                          ' stroke-dasharray="4 3"' if dash else ""))
-    path(valid, 0.9)
-    path(fixed, 0.35, dash=True)
-    c.text(left, topy - 12, "20 peeks, null true", size=9, color=c.t["ink_faint"],
-           tracking=0.8)
-    c.text(left, y + h - 14, "always-valid stays above", size=9.5, color=c.accent,
-           tracking=0.4)
+              'stroke-width="2"%s/>' % (pts, c.accent, op,
+                                        ' stroke-dasharray="4 3"' if dash else ""))
+    path(fixed, 0.34, dash=True)
+    path(valid, 0.95)
+    c.text(left, topy - 4, "always valid", size=9, color=c.accent, tracking=0.4)
+    c.text(left, base + 2, "fixed horizon", size=9, color=c.t["ink_faint"], tracking=0.4)
 
 
 def motif_moderation(c, x, y, w, h):
-    """Comment rows: spam struck through, the complaint kept."""
-    left = x + 30
-    top = y + 32
-    rows = [("hide", 0.9), ("hide", 0.75), ("keep", 0.0), ("hide", 0.6), ("keep", 0.0)]
+    left = x + 4
+    top = y + 12
+    rows = [("hide", 0.9), ("hide", 0.75), ("keep", 0), ("hide", 0.6), ("keep", 0)]
     for i, (verdict, op) in enumerate(rows):
-        ry = top + i * 26
-        wdt = w - 76 - (i % 3) * 18
+        ry = top + i * 27
+        wdt = w - 62 - (i % 3) * 20
         if verdict == "hide":
-            c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="14" rx="1" fill="%s" '
-                  'fill-opacity="0.14"/>' % (left, ry, wdt, c.accent))
-            c.rule(left, ry + 7, left + wdt, ry + 7, color=c.accent, op=op, width=1.6)
+            c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="16" rx="1" fill="%s" '
+                  'fill-opacity="0.16"/>' % (left, ry, wdt, c.accent))
+            c.rule(left, ry + 8, left + wdt, ry + 8, color=c.accent, op=op, width=1.8)
         else:
-            c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="14" rx="1" fill="none" '
-                  'stroke="%s" stroke-opacity="0.55"/>' % (left, ry, wdt, c.accent))
-            c.text(left + wdt + 10, ry + 11, "KEPT", size=8.5, color=c.accent,
-                   tracking=1.0)
-    c.text(left, y + h - 14, "criticism survives every rule", size=9.5,
-           color=c.t["ink_faint"], tracking=0.4)
+            c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="16" rx="1" fill="none" '
+                  'stroke="%s" stroke-opacity="0.65"/>' % (left, ry, wdt, c.accent))
+            c.text(left + wdt + 10, ry + 12.5, "KEPT", size=8.5, color=c.accent,
+                   tracking=1.2)
 
 
 def motif_ledger(c, x, y, w, h):
-    """The balance chain: each row proves the one above it, until one does not."""
-    left = x + 28
-    top = y + 34
+    left = x + 16
+    top = y + 8
     vals = ["2 740,55", "2 658,15", "2 538,25", "1 898,25"]
     for i, v in enumerate(vals):
-        ry = top + i * 27
+        ry = top + i * 33
         ok = i != 2
-        c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="19" rx="1" fill="%s" '
-              'fill-opacity="%.2f"/>' % (left, ry, w - 74, c.accent,
-                                         0.10 if ok else 0.26))
-        c.text(left + 10, ry + 13.5, v, size=11, color=c.t["ink"], tracking=0.2)
+        c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="23" rx="1" fill="%s" '
+              'fill-opacity="%.2f"/>' % (left, ry, w - 34, c.accent,
+                                         0.12 if ok else 0.3))
+        c.text(left + 12, ry + 16, v, size=12, color=c.t["ink"], tracking=0.2)
         if i:
             c.add('<path d="M %.1f %.1f V %.1f" stroke="%s" stroke-opacity="%.2f" '
-                  'stroke-width="1.2"/>' % (left - 9, ry - 8, ry, c.accent,
-                                            0.8 if ok else 0.95))
-            c.text(left - 9, ry - 11, "+" if ok else "x", size=10, color=c.accent,
+                  'stroke-width="1.3"/>' % (left - 10, ry - 10, ry, c.accent,
+                                            0.75 if ok else 1))
+            c.text(left - 10, ry - 13, "+" if ok else "x", size=11, color=c.accent,
                    anchor="middle")
-    c.text(left, y + h - 14, "row 3 breaks the chain", size=9.5,
-           color=c.t["ink_faint"], tracking=0.4)
 
 
 def motif_layers(c, x, y, w, h):
-    """Four layers, and the one the model never sees."""
-    left = x + 34
-    top = y + 30
-    layers = [("FACE", 0.20), ("BRAIN", 0.55), ("PROFILE", 0.35), ("VAULT", 0.9)]
+    left = x + 6
+    top = y + 6
+    layers = [("FACE", 0.22), ("BRAIN", 0.6), ("PROFILE", 0.38), ("VAULT", 0.95)]
     for i, (name, op) in enumerate(layers):
-        ry = top + i * 30
+        ry = top + i * 34
         sealed = name == "VAULT"
-        c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="22" rx="1" fill="%s" '
-              'fill-opacity="%.2f" stroke="%s" stroke-opacity="%.2f"%s/>'
-              % (left, ry, w - 80, c.accent, op * 0.35, c.accent, op,
-                 ' stroke-dasharray="0"' if not sealed else ""))
-        c.text(left + 12, ry + 15, name, size=9.5,
-               color=c.t["ink"] if op > 0.4 else c.t["ink_soft"], tracking=1.4)
+        c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="26" rx="1" fill="%s" '
+              'fill-opacity="%.2f" stroke="%s" stroke-opacity="%.2f"/>'
+              % (left, ry, w - 12, c.accent, op * 0.32, c.accent, op))
+        c.text(left + 14, ry + 17, name, size=10,
+               color=c.t["ink"] if op > 0.4 else c.t["ink_soft"], tracking=1.6)
         if sealed:
-            bx = left + w - 92
-            c.add('<rect x="%.1f" y="%.1f" width="9" height="8" rx="1" fill="%s" '
-                  'fill-opacity="0.95"/>' % (bx, ry + 10, c.accent))
-            c.add('<path d="M %.1f %.1f a 4.5 4.5 0 0 1 9 0" fill="none" stroke="%s" '
-                  'stroke-opacity="0.95" stroke-width="1.4"/>' % (bx, ry + 10, c.accent))
-    c.text(left, y + h - 12, "the model never sees a value", size=9.5,
-           color=c.t["ink_faint"], tracking=0.4)
+            bx = left + w - 44
+            c.add('<rect x="%.1f" y="%.1f" width="11" height="9" rx="1" fill="%s"/>'
+                  % (bx, ry + 12, c.accent))
+            c.add('<path d="M %.1f %.1f a 5.5 5.5 0 0 1 11 0" fill="none" stroke="%s" '
+                  'stroke-width="1.6"/>' % (bx, ry + 12, c.accent))
 
 
 MOTIFS = {
@@ -531,6 +537,20 @@ MOTIFS = {
     "peek": motif_peek, "moderation": motif_moderation, "ledger": motif_ledger,
     "layers": motif_layers,
 }
+
+
+def motif_frame(c, skill, x, y, w, h):
+    """The pane a motif lives in: label at the top, caption at the foot, graphic
+    between them. Identical on all ten, which is the point."""
+    c.glass(x, y, w, h, r=2)
+    c.spine(x, y, h, op=0.55)
+    c.text(x + 18, y + 26, skill["motif_label"], size=8.5, color=skill["accent"],
+           tracking=1.8)
+    c.rule(x + 18, y + 36, x + w - 18, y + 36, op=0.16)
+    MOTIFS[skill["motif"]](c, x + 24, y + 48, w - 48, h - 48 - 34)
+    c.rule(x + 18, y + h - 30, x + w - 18, y + h - 30, op=0.16)
+    c.text(x + 18, y + h - 13, skill["motif_caption"], size=9.5,
+           color=c.t["ink_soft"], tracking=0.3)
 
 
 # --------------------------------------------------------------------------
@@ -554,35 +574,32 @@ def hero(skill, mode):
     c = Canvas(mode, W, 400, skill["accent"])
     c.ground()
     c.grid(40)
-    c.glow(985, 196, 300)
-    c.glow(120, 350, 240, opacity=THEME[mode]["glow_op"] * 0.35)
+    c.glow(960, 200, 340)
+    c.glow(110, 372, 300, opacity=THEME[mode]["glow_op"] * 0.45)
 
     c.glass(48, 44, 1104, 312, r=2)
+    c.spine(48, 44, 312)
+    c.marks(48, 44, 1104, 312)
 
-    # index rail: the brutalist part, a number in the margin
-    c.text(88, 106, "AGENT SKILL", size=10, color=c.t["ink_faint"], tracking=2.6)
-    c.rule(184, 102, 232, 102, op=0.35)
-    c.text(242, 106, skill["index"], size=10, color=skill["accent"], tracking=2.6)
+    c.text(92, 106, "AGENT SKILL", size=10, color=c.t["ink_faint"], tracking=2.6)
+    c.rule(188, 102, 236, 102, op=0.4)
+    c.text(246, 106, skill["index"], size=10, color=skill["accent"], tracking=2.6)
 
     name = skill["title"]
     size = 46 if len(name) <= 21 else (40 if len(name) <= 27 else 35)
-    c.text(86, 166, name, size=size, family="sans", weight=700, color=c.t["ink"],
+    c.text(90, 170, name, size=size, family="sans", weight=700, color=c.t["ink"],
            tracking=-1.1)
-    c.text(88, 194, skill["repo"], size=11.5, color=skill["accent"], tracking=0.6,
-           opacity=0.95)
+    c.text(92, 198, skill["repo"], size=11.5, color=skill["accent"], tracking=0.6)
 
-    for i, line in enumerate(wrap(skill["promise"], 56)[:3]):
-        c.text(88, 232 + i * 20, line, size=12.5, color=c.t["ink_soft"], tracking=0.15)
+    for i, line in enumerate(wrap(skill["promise"], 52)[:3]):
+        c.text(92, 236 + i * 21, line, size=12.5, color=c.t["ink_soft"], tracking=0.15)
 
-    cx = 88
+    cx = 92
     for i, ch in enumerate(skill["chips"]):
-        cx += c.chip(cx, 300, ch, accent=(i == 0))
+        cx += c.chip(cx, 302, ch, accent=(i == 0))
 
-    # motif pane
-    c.glass(812, 92, 300, 216, r=2, a=None, b=None)
-    MOTIFS[skill["motif"]](c, 812, 92, 300, 216)
-
-    c.rule(48, 356, 1152, 356, op=0.10)
+    c.rule(780, 92, 780, 308, op=0.14)
+    motif_frame(c, skill, 812, 92, 300, 216)
     return c.render()
 
 
@@ -592,93 +609,89 @@ def hero(skill, mode):
 
 COLX = [76, 358, 640, 922]
 NODEW = 202
-ROWY = [150, 244, 338, 432]
-NODEH = 66
+NODEH = 72
+ROW0 = 152
+ROWGAP = 100
 
 
 def _node_rect(n):
-    x = COLX[n["col"]]
-    y = ROWY[n["row"]]
-    return x, y, NODEW, NODEH
+    return COLX[n["col"]], ROW0 + n["row"] * ROWGAP, NODEW, NODEH
 
 
 def diagram(skill, mode):
     spec = skill["diagram"]
-    height = 600
+    rows = max(n["row"] for n in spec["nodes"]) + 1
+    grid_bottom = ROW0 + (rows - 1) * ROWGAP + NODEH
+    note_y = grid_bottom + 48
+    note_h = 76
+    height = note_y + note_h + 36
+
     c = Canvas(mode, W, height, skill["accent"])
     c.ground()
     c.grid(40)
-    c.glow(150, 90, 300, opacity=THEME[mode]["glow_op"] * 0.55)
-    c.glow(1080, 470, 320, opacity=THEME[mode]["glow_op"] * 0.4)
+    c.glow(170, 100, 340, opacity=THEME[mode]["glow_op"] * 0.6)
+    c.glow(1070, height - 120, 340, opacity=THEME[mode]["glow_op"] * 0.45)
 
     c.text(76, 62, "HOW IT WORKS INSIDE", size=10, color=c.t["ink_faint"], tracking=2.6)
-    c.rule(272, 58, 320, 58, op=0.35)
+    c.rule(272, 58, 320, 58, op=0.4)
     c.text(330, 62, skill["repo"], size=10, color=skill["accent"], tracking=1.6)
-    c.text(74, 100, spec["title"], size=25, family="sans", weight=700,
+    c.text(74, 102, spec["title"], size=25, family="sans", weight=700,
            color=c.t["ink"], tracking=-0.6)
-    c.rule(76, 122, 1124, 122, op=0.12)
+    c.rule(76, 124, 1124, 124, op=0.14)
 
     nodes = {n["id"]: n for n in spec["nodes"]}
 
-    # edges first, so panes sit on top of the lines
     for e in spec["edges"]:
         a, b = nodes[e[0]], nodes[e[1]]
         ax, ay, aw, ah = _node_rect(a)
         bx, by, bw, bh = _node_rect(b)
         label = e[2] if len(e) > 2 else None
-        dashed = len(e) > 3 and e[3] == "dashed"
         if a["col"] == b["col"]:
             x = ax + aw / 2
             if b["row"] > a["row"]:
-                c.arrow(x, ay + ah + 2, x, by - 8, dash="4 4" if dashed else None)
+                c.arrow(x, ay + ah + 2, x, by - 8)
                 ly = (ay + ah + by) / 2
             else:
-                c.arrow(x, ay - 2, x, by + bh + 8, dash="4 4" if dashed else None)
+                c.arrow(x, ay - 2, x, by + bh + 8)
                 ly = (ay + by + bh) / 2
             if label:
-                c.text(x + 10, ly + 3, label, size=9, color=c.t["ink_faint"],
-                       tracking=0.4)
+                c.text(x + 10, ly + 3, label, size=9, color=c.t["ink_faint"])
         elif a["row"] == b["row"]:
-            c.arrow(ax + aw + 2, ay + ah / 2, bx - 8, by + bh / 2,
-                    dash="4 4" if dashed else None)
+            c.arrow(ax + aw + 2, ay + ah / 2, bx - 8, by + bh / 2)
             if label:
-                c.text((ax + aw + bx) / 2, ay + ah / 2 - 9, label, size=9,
-                       color=c.t["ink_faint"], anchor="middle", tracking=0.4)
+                c.text((ax + aw + bx) / 2, ay + ah / 2 - 10, label, size=9,
+                       color=c.t["ink_faint"], anchor="middle")
         else:
             c.elbow(ax + aw + 2, ay + ah / 2, bx - 8, by + bh / 2)
             if label:
-                c.text((ax + aw + bx) / 2 + 6, by + bh / 2 - 9, label, size=9,
-                       color=c.t["ink_faint"], anchor="middle", tracking=0.4)
+                c.text((ax + aw + bx) / 2 + 8, by + bh / 2 - 10, label, size=9,
+                       color=c.t["ink_faint"], anchor="middle")
 
     for n in spec["nodes"]:
         x, y, w, h = _node_rect(n)
         kind = n.get("kind", "step")
+        c.glass(x, y, w, h, r=2, stroke_op=0.0 if kind == "gate" else None)
         if kind == "gate":
-            c.glass(x, y, w, h, r=2, a=None, b=None, stroke_op=0.0)
             c.add('<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="2" fill="none" '
-                  'stroke="%s" stroke-opacity="0.75" stroke-width="1.4"/>'
+                  'stroke="%s" stroke-opacity="0.8" stroke-width="1.4"/>'
                   % (x + .5, y + .5, w - 1, h - 1, skill["accent"]))
-            c.add('<rect x="%.1f" y="%.1f" width="3" height="%.1f" fill="%s" '
-                  'fill-opacity="0.95"/>' % (x + 1, y + 1, h - 2, skill["accent"]))
-        else:
-            c.glass(x, y, w, h, r=2)
-            if kind in ("in", "out"):
-                c.add('<rect x="%.1f" y="%.1f" width="3" height="%.1f" fill="%s" '
-                      'fill-opacity="%.2f"/>' % (x + 1, y + 1, h - 2, skill["accent"],
-                                                 0.9 if kind == "out" else 0.4))
-        c.text(x + 16, y + 27, n["label"], size=11.5,
-               color=c.t["ink"], tracking=0.5)
+            c.spine(x, y, h)
+        elif kind == "out":
+            c.spine(x, y, h)
+        elif kind == "in":
+            c.spine(x, y, h, op=0.45)
+        c.text(x + 18, y + 28, n["label"], size=11.5, color=c.t["ink"], tracking=0.5)
         if n.get("sub"):
-            for i, line in enumerate(wrap(n["sub"], 30)[:2]):
-                c.text(x + 16, y + 45 + i * 13, line, size=9.5, color=c.t["ink_faint"],
-                       tracking=0.2)
+            for i, line in enumerate(wrap(n["sub"], 28)[:2]):
+                c.text(x + 18, y + 47 + i * 14, line, size=9.5, color=c.t["ink_faint"])
 
-    # the rule worth remembering
-    c.glass(76, 516, 1048, 56, r=2)
-    c.add('<rect x="77" y="517" width="3" height="54" fill="%s" fill-opacity="0.95"/>'
-          % skill["accent"])
-    c.text(102, 539, "THE RULE", size=9, color=skill["accent"], tracking=2.0)
-    c.text(102, 558, spec["note"], size=12, color=c.t["ink_soft"], tracking=0.15)
+    c.glass(76, note_y, 1048, note_h, r=2)
+    c.spine(76, note_y, note_h)
+    c.marks(76, note_y, 1048, note_h, size=9, inset=7)
+    c.text(104, note_y + 26, "THE RULE", size=9, color=skill["accent"], tracking=2.0)
+    for i, line in enumerate(wrap(spec["note"], 96)[:2]):
+        c.text(104, note_y + 47 + i * 18, line, size=12.5, color=c.t["ink_soft"],
+               tracking=0.15)
     return c.render()
 
 
@@ -734,6 +747,7 @@ SKILLS = [
     {
         "index": "01", "repo": "invisible-text-forensics", "accent": "#8B5CF6",
         "title": "Invisible Text Forensics", "tag": "SECURITY · TEXT", "motif": "unicode",
+        "motif_label": "SCAN", "motif_caption": "3 hidden characters between 8 visible ones",
         "promise": "Every humanizer rewrites style. None of them read the bytes. "
                    "This finds and removes what renders as nothing.",
         "chips": chips(31),
@@ -766,6 +780,7 @@ SKILLS = [
     {
         "index": "02", "repo": "cpa-profit-ops", "accent": "#10B981",
         "title": "CPA Profit Ops", "tag": "MEDIA BUYING", "motif": "profit",
+        "motif_label": "PROFIT BY COUNTRY", "motif_caption": "spend against revenue, one currency",
         "promise": "Platforms know what you spent. They do not know what a lead is "
                    "worth, so they cannot tell you if you made money.",
         "chips": chips(31),
@@ -798,6 +813,7 @@ SKILLS = [
     {
         "index": "03", "repo": "affiliate-tracker-ops", "accent": "#06B6D4",
         "title": "Affiliate Tracker Ops", "tag": "TRACKING", "motif": "chain",
+        "motif_label": "THE CHAIN", "motif_caption": "the click id dies between LP and OFFER",
         "promise": "A conversion that does not attribute is a broken parameter chain, "
                    "not a tracker bug. Find the hop where it dies.",
         "chips": chips(26),
@@ -830,6 +846,7 @@ SKILLS = [
     {
         "index": "04", "repo": "whatsapp-receptionist-builder", "accent": "#22C55E",
         "title": "WhatsApp Receptionist Builder", "tag": "BUILD", "motif": "window",
+        "motif_label": "SERVICE WINDOW", "motif_caption": "the clock starts at their last message",
         "promise": "The webhook acknowledges, the worker thinks. Everything else in "
                    "a WhatsApp receptionist follows from that one decision.",
         "chips": chips(32),
@@ -862,6 +879,7 @@ SKILLS = [
     {
         "index": "05", "repo": "lead-delivery-reconciliation", "accent": "#3B82F6",
         "title": "Lead Delivery Reconciliation", "tag": "LEAD GEN", "motif": "match",
+        "motif_label": "RECONCILIATION", "motif_caption": "3 of 5 paid, effective payout 10.20",
         "promise": "Received is a format check, not money. Only the buyer's register "
                    "says what the day was actually worth.",
         "chips": chips(49),
@@ -894,6 +912,7 @@ SKILLS = [
     {
         "index": "06", "repo": "competitor-ad-intelligence", "accent": "#F59E0B",
         "title": "Competitor Ad Intelligence", "tag": "COMPETITIVE", "motif": "lineage",
+        "motif_label": "LINEAGE", "motif_caption": "three re-uploads, one concept, 99 days",
         "promise": "Nobody publishes competitor spend. Score the signals a losing ad "
                    "cannot fake for long, and group the re-uploads first.",
         "chips": chips(35),
@@ -924,6 +943,7 @@ SKILLS = [
     {
         "index": "07", "repo": "incrementality-testing", "accent": "#6366F1",
         "title": "Incrementality Testing", "tag": "EXPERIMENTS", "motif": "peek",
+        "motif_label": "TWENTY PEEKS", "motif_caption": "under a true null, only one holds",
         "promise": "Platform ROAS credits conversions that would have happened anyway. "
                    "This answers the causal question, and survives being watched.",
         "chips": chips(49),
@@ -957,6 +977,7 @@ SKILLS = [
     {
         "index": "08", "repo": "ad-comment-moderation", "accent": "#F43F5E",
         "title": "Ad Comment Moderation", "tag": "SOCIAL OPS", "motif": "moderation",
+        "motif_label": "VERDICTS", "motif_caption": "spam hidden, criticism left visible",
         "promise": "Most scripts hide everything new. This one states a reason for "
                    "every verdict, and leaves honest criticism visible.",
         "chips": chips(40),
@@ -989,6 +1010,7 @@ SKILLS = [
     {
         "index": "09", "repo": "bank-statement-to-table", "accent": "#84CC16",
         "title": "Bank Statement to Table", "tag": "DOCUMENTS", "motif": "ledger",
+        "motif_label": "BALANCE CHAIN", "motif_caption": "row three does not follow from row two",
         "promise": "Extraction is guessing. A statement carries its own proof, so a "
                    "parse is either verified against the balance chain or wrong.",
         "chips": chips(50),
@@ -1021,6 +1043,7 @@ SKILLS = [
     {
         "index": "10", "repo": "always-on-agent", "accent": "#D946EF",
         "title": "Always-On Agent", "tag": "AGENTS", "motif": "layers",
+        "motif_label": "FOUR LAYERS", "motif_caption": "key names reach the model, values never",
         "promise": "Four systems, not one. And a first pass that is incapable of harm, "
                    "not merely careful about it.",
         "chips": chips(27),
